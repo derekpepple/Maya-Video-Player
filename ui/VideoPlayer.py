@@ -14,13 +14,13 @@ from PySide2.QtWidgets import *
 
 from PySide2.QtMultimediaWidgets import QVideoWidget
 
-import ui.resources_rc as resources_rc
+import ui.resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(717, 600)
+        MainWindow.resize(714, 736)
         MainWindow.setStyleSheet(u"background-color:#444444;")
         self.actionOpen = QAction(MainWindow)
         self.actionOpen.setObjectName(u"actionOpen")
@@ -97,10 +97,124 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.sampleImage = QLabel(self.centralwidget)
+        self.sampleImage.setObjectName(u"sampleImage")
+        sizePolicy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.sampleImage.sizePolicy().hasHeightForWidth())
+        self.sampleImage.setSizePolicy(sizePolicy)
+        self.sampleImage.setStyleSheet(u"color:#eb820b;")
+        self.sampleImage.setFrameShape(QFrame.NoFrame)
+        self.sampleImage.setScaledContents(True)
+        self.sampleImage.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_2.addWidget(self.sampleImage)
+
+        self.verticalLayout_3 = QVBoxLayout()
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.fileNameTitle = QLabel(self.centralwidget)
+        self.fileNameTitle.setObjectName(u"fileNameTitle")
+        self.fileNameTitle.setStyleSheet(u"color:#eb820b;")
+
+        self.verticalLayout_3.addWidget(self.fileNameTitle)
+
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+        self.label.setStyleSheet(u"color:#eb820b;")
+
+        self.horizontalLayout_5.addWidget(self.label)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_5)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.outputLabel = QLabel(self.centralwidget)
+        self.outputLabel.setObjectName(u"outputLabel")
+        self.outputLabel.setStyleSheet(u"color:#eb820b;")
+
+        self.horizontalLayout_3.addWidget(self.outputLabel)
+
+        self.lineEdit = QLineEdit(self.centralwidget)
+        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineEdit.setAutoFillBackground(False)
+        self.lineEdit.setStyleSheet(u"color:#eb820b;\n"
+"background-color:#5d5d5d;")
+        self.lineEdit.setMaxLength(32769)
+        self.lineEdit.setFrame(False)
+
+        self.horizontalLayout_3.addWidget(self.lineEdit)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
+
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.frameRateLabel = QLabel(self.centralwidget)
+        self.frameRateLabel.setObjectName(u"frameRateLabel")
+        self.frameRateLabel.setStyleSheet(u"color:#eb820b;")
+
+        self.horizontalLayout_4.addWidget(self.frameRateLabel)
+
+        self.spinBox = QSpinBox(self.centralwidget)
+        self.spinBox.setObjectName(u"spinBox")
+        self.spinBox.setStyleSheet(u"color:#eb820b;\n"
+"background-color:#5d5d5d;")
+        self.spinBox.setFrame(False)
+        self.spinBox.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.spinBox.setMinimum(1)
+        self.spinBox.setMaximum(144)
+        self.spinBox.setValue(24)
+
+        self.horizontalLayout_4.addWidget(self.spinBox)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_4)
+
+
+        self.horizontalLayout_2.addLayout(self.verticalLayout_3)
+
+        self.generateButton = QPushButton(self.centralwidget)
+        self.generateButton.setObjectName(u"generateButton")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.generateButton.sizePolicy().hasHeightForWidth())
+        self.generateButton.setSizePolicy(sizePolicy1)
+        self.generateButton.setStyleSheet(u"color:#eb820b;\n"
+"background-color:#5d5d5d;")
+
+        self.horizontalLayout_2.addWidget(self.generateButton)
+
+        self.horizontalLayout_2.setStretch(0, 1)
+        self.horizontalLayout_2.setStretch(1, 1)
+        self.horizontalLayout_2.setStretch(2, 1)
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+
+        self.progressBar = QProgressBar(self.centralwidget)
+        self.progressBar.setObjectName(u"progressBar")
+        self.progressBar.setEnabled(False)
+        self.progressBar.setStyleSheet(u"color:#eb820b;")
+        self.progressBar.setValue(24)
+
+        self.verticalLayout.addWidget(self.progressBar)
+
+        self.verticalLayout.setStretch(0, 4)
+        self.verticalLayout.setStretch(1, 1)
+        self.verticalLayout.setStretch(2, 1)
+        self.verticalLayout.setStretch(3, 2)
+        self.verticalLayout.setStretch(4, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 717, 26))
+        self.menubar.setGeometry(QRect(0, 0, 714, 26))
         self.menubar.setStyleSheet(u"QMenuBar{\n"
 "	color:white;\n"
 "}\n"
@@ -147,6 +261,13 @@ class Ui_MainWindow(object):
         self.pausePlayButton.setShortcut(QCoreApplication.translate("MainWindow", u"0", None))
 #endif // QT_CONFIG(shortcut)
         self.forwardButton.setText("")
+        self.sampleImage.setText(QCoreApplication.translate("MainWindow", u"No Image Sequence Found!", None))
+        self.fileNameTitle.setText(QCoreApplication.translate("MainWindow", u"Sequence Name: file.###.png", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Frames: ###", None))
+        self.outputLabel.setText(QCoreApplication.translate("MainWindow", u"Output File Name:", None))
+        self.lineEdit.setText(QCoreApplication.translate("MainWindow", u"output.avi", None))
+        self.frameRateLabel.setText(QCoreApplication.translate("MainWindow", u"Frame Rate (FPS):", None))
+        self.generateButton.setText(QCoreApplication.translate("MainWindow", u"Generate Video File", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
     # retranslateUi
 

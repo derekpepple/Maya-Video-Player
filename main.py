@@ -1,13 +1,17 @@
 from PySide2 import QtCore, QtGui, QtWidgets, QtMultimedia
 
 from PySide2.QtGui import QIcon
-from PySide2.QtCore import QSize
+from PySide2.QtCore import QSize, QCoreApplication, QRunnable, QThreadPool, Signal
+
 
 import cv2
 import glob
 import numpy
 import sys
 import importlib
+import os
+import re
+import maya.cmds as cmds
 
 import ui.VideoPlayer as VideoPlayer
 
@@ -19,9 +23,18 @@ try:
 except:
     pass
 
+path = 'C:/Users/derek/Desktop/Video Testing/images/output.#.png'
+firstImage = 'C:/Users/derek/Desktop/Video Testing/images/output.0001.png'
 
+
+'''
+Main Window Class controls the main functionality
+'''
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
+    progress = Signal(int)
+    range = Signal(int)
+    finished = Signal()
+    def __init__(self, path, firstImage, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.ui = VideoPlayer.Ui_MainWindow()
@@ -29,17 +42,33 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ui.media = QtMultimedia.QMediaPlayer(self)
         self.ui.media.setVideoOutput(self.ui.mediaPlayer)
+        self.ui.media.mediaStatusChanged.connect(self.videoEnded)
 
-        buildVideo('C:\\Users\\derek\\Desktop\\Video Testing\\images\\output.*.png', 'output.avi')
+        # path = cmds.renderSettings(genericFrameImageName="#",fullPath=True)[0]
+        # firstImage = cmds.renderSettings(firstImageName=True, fullPath=True)[0]
+
+        self.regex, displayPath, frameCount = findFiles(path)
+        self.configureLabels(firstImage, displayPath, frameCount)
+
+
+        # Async video builder setup
+        self.threadpool = QThreadPool()
+
+        self.ui.generateButton.clicked.connect(self.buildVideo)
 
         # Setup Slider before loading media
         self.setupSlider()
 
-        #TODO: change this to do something useful
-        self.loadMedia("output.avi")
+        self.mediaLoaded = False
         self.mediaPlaying = False
 
         self.loadPausePlayIcons()
+        self.ui.progressBar.setHidden(True)
+
+        # Video Generation Signals
+        self.progress.connect(lambda value: self.ui.progressBar.setValue(value))
+        self.range.connect(lambda value: self.ui.progressBar.setMaximum(value))
+        self.finished.connect(lambda: self.loadMedia(self.ui.lineEdit.text()))
 
         # Configure event handlers for control buttons
         self.ui.pausePlayButton.clicked.connect(self.pausePlay)
@@ -53,9 +82,13 @@ class MainWindow(QtWidgets.QMainWindow):
     
     # Load a video into the media player and make it visible
     def loadMedia(self, fileName):
+        self.ui.progressBar.setHidden(True)
         url = QtCore.QUrl.fromLocalFile(fileName)
+        print(fileName)
+        self.ui.media.setMedia(QtMultimedia.QMediaContent(None))
         self.ui.media.setMedia(QtMultimedia.QMediaContent(url))
         self.ui.mediaPlayer.show()
+        self.mediaLoaded = True
 
     # Grab image resources for the pause and play buttons
     def loadPausePlayIcons(self):
@@ -82,31 +115,116 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def pausePlay(self):
-        if not self.mediaPlaying:
-            self.ui.media.play()
-            self.ui.pausePlayButton.setIcon(self.pauseIcon)
+        if self.mediaLoaded:
+            if not self.mediaPlaying:
+                self.ui.media.play()
+                self.ui.pausePlayButton.setIcon(self.pauseIcon)
+            else:
+                self.ui.media.pause()
+                self.ui.pausePlayButton.setIcon(self.playIcon)
+
+            self.mediaPlaying = not self.mediaPlaying
         else:
-            self.ui.media.pause()
-            self.ui.pausePlayButton.setIcon(self.playIcon)
+            pass # do nothing for now
 
-        self.mediaPlaying = not self.mediaPlaying
-
-
-# Takes a sequence of frames and converts it to a video file
-def buildVideo(framePath, outputPath):
-    img_array = []
-    for filename in glob.glob(framePath):
-        img = cv2.imread(filename)
-        height, width, layers = img.shape
-        size = (width,height)
-        img_array.append(img)
-
-    # Example used AVI format
-    out = cv2.VideoWriter(outputPath, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+    def configureLabels(self, imagePath, genericPath, frameCount):
+        try:
+            self.ui.generateButton.setHidden(False)
+            pixmap = QtGui.QPixmap(imagePath)
+            self.ui.sampleImage.setPixmap(pixmap)    
+            self.ui.sampleImage.show()
+            self.ui.fileNameTitle.setText(QCoreApplication.translate("MainWindow", u"Sequence Name: {}".format(genericPath), None))
+            self.ui.label.setText(QCoreApplication.translate("MainWindow", u"Frames: {}".format(frameCount), None))
+        except FileNotFoundError:
+            self.ui.generateButton.setHidden(True)
+            self.ui.sampleImage.setText("File Sequence Not Found!")
     
-    for i in range(len(img_array)):
-        out.write(img_array[i])
-    out.release()
+    def buildVideo(self):
+        self.ui.progressBar.setHidden(False)
+        
+        worker = VideoBuilder(self.regex, self.ui.lineEdit.text(), self.ui.spinBox.value(), self.progress, self.range, self.finished)
+        self.threadpool.start(worker)
+
+    def videoEnded(self, status):
+        if status == QtMultimedia.QMediaPlayer.EndOfMedia:
+            self.ui.pausePlayButton.setIcon(self.playIcon)
+            self.mediaPlaying = False
+
+
+'''
+Contains the QThread that launches to create the video file
+''' 
+class VideoBuilder(QRunnable):
+    def __init__(self, framePath, outputPath, frameRate, progress, range, finished):
+        super(VideoBuilder, self).__init__()
+        self.framePath = framePath
+        self.outputPath = outputPath    
+        self.progress = progress
+        self.range = range
+        self.finished = finished  
+        self.frameRate = frameRate
+
+    # Async Thread (Converts files to videos)
+    def run(self):
+               
+        files = glob.glob(self.framePath)
+        self.range.emit(len(files) * 2)
+        step = 0
+
+        img_array = []
+        for filename in files:
+            img = cv2.imread(filename)
+            height, width, layers = img.shape
+            size = (width,height)
+            img_array.append(img)
+            step += 1
+            self.progress.emit(step)
+
+        if len(img_array) == 0:
+            print("No Images Found")
+            return 
+        
+        if os.path.isfile(self.outputPath):
+            os.remove(self.outputPath)
+
+        # Example used AVI format
+        out = cv2.VideoWriter(self.outputPath, cv2.VideoWriter_fourcc(*'DIVX'), self.frameRate, size)
+        
+        for i in range(len(img_array)):
+            out.write(img_array[i])
+            step += 1
+            self.progress.emit(step)
+        out.release()
+        self.finished.emit()
+
+
+'''
+ Other Functions
+'''
+# Takes in generic name from Maya command call, creates a regex and also a display name
+def findFiles(imageGenericName):
+    buildRegex = imageGenericName.replace("#","[0-9]*")
+    displayName = os.path.basename(imageGenericName)
+
+    # Get Frame Count
+    searchRegex = os.path.basename(imageGenericName)
+    searchRegex = searchRegex.replace("#",r"([0-9]+)")
+    searchRegex = searchRegex.replace(".", r"\.")
+
+
+    folder = os.path.dirname(imageGenericName)
+    searchRegex = re.compile(searchRegex)
+    files = [file for file in os.listdir(folder) if searchRegex.match(file)]
+    if len(files) > 0:
+        files.sort()
+        last = files[-1]
+        match = searchRegex.match(last)
+        frameNumber = int(match.group(1))
+    else:
+        frameNumber = 0
+
+
+    return buildRegex, displayName, frameNumber
 
 
 
@@ -122,12 +240,12 @@ def getMayaWindow():
         return shiboken2.wrapInstance(int(pointer), QtWidgets.QWidget)
     
 def runInMaya():
-    mainWindow = MainWindow(getMayaWindow())
+    mainWindow = MainWindow(path, firstImage, getMayaWindow())
     mainWindow.show()
 
 def runStandAlone():
     app = QtWidgets.QApplication(sys.argv)
-    mainWindow = MainWindow()
+    mainWindow = MainWindow(path, firstImage)
     mainWindow.show()
     sys.exit(app.exec_())
 
