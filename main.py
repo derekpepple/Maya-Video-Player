@@ -25,6 +25,7 @@ except:
 
 path = 'C:/Users/derek/Desktop/Video Testing/images/output.#.png'
 firstImage = 'C:/Users/derek/Desktop/Video Testing/images/output.0001.png'
+projectPath = 'C:/Users/derek/Desktop/Video Testing/'
 
 
 '''
@@ -34,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
     progress = Signal(int)
     range = Signal(int)
     finished = Signal()
-    def __init__(self, path, firstImage, parent=None):
+    def __init__(self, path, firstImage, projectPath, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.ui = VideoPlayer.Ui_MainWindow()
@@ -47,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # path = cmds.renderSettings(genericFrameImageName="#",fullPath=True)[0]
         # firstImage = cmds.renderSettings(firstImageName=True, fullPath=True)[0]
 
+        self.projectPath = projectPath
         self.regex, displayPath, frameCount = findFiles(path)
         self.configureLabels(firstImage, displayPath, frameCount)
 
@@ -68,7 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Video Generation Signals
         self.progress.connect(lambda value: self.ui.progressBar.setValue(value))
         self.range.connect(lambda value: self.ui.progressBar.setMaximum(value))
-        self.finished.connect(lambda: self.loadMedia(self.ui.lineEdit.text()))
+        self.finished.connect(lambda: self.loadMedia(os.path.join(self.projectPath, "movies", self.ui.lineEdit.text())))
 
         # Configure event handlers for control buttons
         self.ui.pausePlayButton.clicked.connect(self.pausePlay)
@@ -89,6 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.media.setMedia(QtMultimedia.QMediaContent(url))
         self.ui.mediaPlayer.show()
         self.mediaLoaded = True
+
+        self.pausePlay()
 
     # Grab image resources for the pause and play buttons
     def loadPausePlayIcons(self):
@@ -142,7 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def buildVideo(self):
         self.ui.progressBar.setHidden(False)
         
-        worker = VideoBuilder(self.regex, self.ui.lineEdit.text(), self.ui.spinBox.value(), self.progress, self.range, self.finished)
+        worker = VideoBuilder(self.regex, self.ui.lineEdit.text(), self.ui.spinBox.value(), self.progress, self.range, self.finished, self.projectPath)
         self.threadpool.start(worker)
 
     def videoEnded(self, status):
@@ -155,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 Contains the QThread that launches to create the video file
 ''' 
 class VideoBuilder(QRunnable):
-    def __init__(self, framePath, outputPath, frameRate, progress, range, finished):
+    def __init__(self, framePath, outputPath, frameRate, progress, range, finished, projectPath):
         super(VideoBuilder, self).__init__()
         self.framePath = framePath
         self.outputPath = outputPath    
@@ -163,10 +167,13 @@ class VideoBuilder(QRunnable):
         self.range = range
         self.finished = finished  
         self.frameRate = frameRate
+        self.projectPath = projectPath
 
     # Async Thread (Converts files to videos)
     def run(self):
                
+        fullPath = os.path.join(projectPath, "movies", self.outputPath)
+
         files = glob.glob(self.framePath)
         self.range.emit(len(files) * 2)
         step = 0
@@ -184,11 +191,11 @@ class VideoBuilder(QRunnable):
             print("No Images Found")
             return 
         
-        if os.path.isfile(self.outputPath):
-            os.remove(self.outputPath)
+        if os.path.isfile(fullPath):
+            os.remove(fullPath)
 
         # Example used AVI format
-        out = cv2.VideoWriter(self.outputPath, cv2.VideoWriter_fourcc(*'DIVX'), self.frameRate, size)
+        out = cv2.VideoWriter(fullPath, cv2.VideoWriter_fourcc(*'DIVX'), self.frameRate, size)
         
         for i in range(len(img_array)):
             out.write(img_array[i])
@@ -239,17 +246,17 @@ def getMayaWindow():
     if pointer is not None:
         return shiboken2.wrapInstance(int(pointer), QtWidgets.QWidget)
     
-def runInMaya():
-    mainWindow = MainWindow(path, firstImage, getMayaWindow())
+def runInMaya(path, firstImage, projectPath):
+    mainWindow = MainWindow(path, firstImage, projectPath, getMayaWindow())
     mainWindow.show()
 
-def runStandAlone():
+def runStandAlone(path, firstImage, projectPath):
     app = QtWidgets.QApplication(sys.argv)
-    mainWindow = MainWindow(path, firstImage)
+    mainWindow = MainWindow(path, firstImage, projectPath)
     mainWindow.show()
     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    #runInMaya()
-    runStandAlone()
+    #runInMaya(path, firstImage)
+    runStandAlone(path, firstImage, projectPath)
