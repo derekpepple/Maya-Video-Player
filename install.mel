@@ -1,0 +1,8 @@
+string $VERSION = "2024";
+
+// Get path to Mayapy installation
+string $exec_path = "\"C:\\Program Files\\Autodesk\\Maya" + $VERSION + "\\bin\\mayapy.exe\"";
+
+// Add OpenCV to Mayapy
+string $command = $exec_path + " -m pip install opencv-python";
+system $command;

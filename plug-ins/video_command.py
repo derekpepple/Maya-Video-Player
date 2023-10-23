@@ -1,6 +1,7 @@
 import maya.api.OpenMaya as om
+from maya import OpenMayaMPx as mpx
 import maya.cmds as cmds
-import main as player
+import ui.main as player
 
 # Not sure if this is necessary
 def maya_useNewAPI():
@@ -18,7 +19,7 @@ def initializePlugin(plugin):
         om.MGlobal.displayError("Failed to register command {0}".format(VideoPlayerCmd))
 
 
-def unitializePlugin(plugin):
+def uninitializePlugin(plugin):
     plugin_fn = om.MFnPlugin(plugin)
 
     try:
@@ -27,7 +28,7 @@ def unitializePlugin(plugin):
         om.MGlobal.displayError("Failed to deregister command: {0}".format(VideoPlayerCmd))
 
 
-class VideoPlayerCmd(om.MPxCommand):
+class VideoPlayerCmd(mpx.MPxCommand):
 
     COMMAND_NAME = "videoPlayer"
 
@@ -36,14 +37,17 @@ class VideoPlayerCmd(om.MPxCommand):
     
 
     def doIt(self, args):
+        print("doin it")
         projectRootDirectory = cmds.workspace(q=True, rootDirectory=True)
         firstImagePath = cmds.renderSettings(firstImageName=True, fullPath=True)[0]
         path = cmds.renderSettings(genericFrameImageName="#",fullPath=True)[0]
 
+        
         # TODO: add params
         player.runInMaya(path, firstImagePath, projectRootDirectory)
         
 
     @classmethod
     def creator(cls):
-        return VideoPlayerCmd
+        print("hello")
+        return mpx.asMPxPtr(VideoPlayerCmd())

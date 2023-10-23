@@ -13,7 +13,11 @@ import os
 import re
 import maya.cmds as cmds
 
-import ui.VideoPlayer as VideoPlayer
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(1, dir_path)
+
+import VideoPlayer as VideoPlayer
 
 try:
     importlib.reload(VideoPlayer)

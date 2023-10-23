@@ -14,7 +14,7 @@ from PySide2.QtWidgets import *
 
 from PySide2.QtMultimediaWidgets import QVideoWidget
 
-import ui.resources_rc
+import resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
