@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="controls">
+    <file>images/back.svg</file>
+    <file>images/forward.svg</file>
+    <file>images/pause.svg</file>
+    <file>images/play.svg</file>
+    <file>images/stop.svg</file>
+  </qresource>
+</RCC>
