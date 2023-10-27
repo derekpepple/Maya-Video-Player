@@ -1,10 +1,15 @@
-# Maya-Video-Player
-A plugin for Autodesk Maya that adds a video player to play back rendered animations.
+# Maya-Video-Player  
+A plugin for Autodesk Maya that adds a video player to play back rendered animations.  
 
-## Installation Instructions:
+## Installation Instructions:  
+### Modify install.mel  
+1. Change the $VERSION variable to be the year version of your Maya install.  
+2. Change the $INSTALL_LOCATION variable to be the path to the downloaded repository.  
 
-1. Change the path in video_command.mod to the location of the downloaded repository folder
+### Install and Activate Plugin
+1. Drag ths install.mel file into your Maya viewport to begin installation.  
+2. Go to **Windows** > **Settings/Preferences** > **Plug-in Manager**  
+3. Find the video_command.py plugin and load it. 
 
-2. Change the version of Maya (2024, etc) in the install.mel file.
-
-3. Drag and drop the install.mel file into the Maya viewport.
+## Usage:  
+1. To use the video player, run the ```videoPlayer;``` MEL command in the script editor after rendering an animation. The player will detect the images based on your scenes render output settings. 
