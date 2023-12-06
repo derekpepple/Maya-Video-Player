@@ -4,7 +4,7 @@ A plugin for Autodesk Maya that adds a video player to play back rendered animat
 
 ## Installation
 
-### plugget install
+### 1-click install with Plugget
 1. install [plugget for maya](https://github.com/plugget/plugget-qt-maya-plugin)
 2. search for `video-player` and click install
 
